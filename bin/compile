@@ -12,8 +12,10 @@ BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
 . $BIN_DIR/common.sh
 
 export_env_dir $ENV_DIR
-
-JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-"https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku/jvm.tgz"}
+#add this
+JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-"https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/jvm-common.tgz"}
+#comment this
+#JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-"https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku/jvm.tgz"}
 mkdir -p /tmp/jvm-common
 curl --silent --location $JVM_COMMON_BUILDPACK | tar xzm -C /tmp/jvm-common --strip-components=1
 . /tmp/jvm-common/bin/util
@@ -86,7 +88,7 @@ $PLAY_PATH/play version | sed -u 's/^/       /'
 APP_DIR=./
 echo "       Building Play! application at directory $APP_DIR"
 
-DEPENDENCIES_CMD="$PLAY_PATH/play dependencies $APP_DIR --forProd --forceCopy --silent -Duser.home=$BUILD_DIR 2>&1"
+DEPENDENCIES_CMD="$PLAY_PATH/play dependencies $APP_DIR --forProd --nosync --forceCopy --silent -Duser.home=$BUILD_DIR 2>&1"
 echo "       Resolving dependencies: $DEPENDENCIES_CMD"
 eval "$DEPENDENCIES_CMD" | sed -u 's/^/       /'
 check_compile_status
