@@ -12,14 +12,10 @@ BIN_DIR=$(cd $(dirname $0); pwd) # absolute path
 . $BIN_DIR/common.sh
 
 export_env_dir $ENV_DIR
-#add this 
+
 JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-"https://buildpacks-repository.s3.eu-central-1.amazonaws.com/jvm-common.tar.xz"}
-#add this
-#JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-"https://codon-buildpacks.s3.amazonaws.com/buildpacks/heroku/jvm-common.tgz"}
-#comment this
-#JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-"https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku/jvm.tgz"}
 mkdir -p /tmp/jvm-common
-curl --silent --location $JVM_COMMON_BUILDPACK | tar xzm -C /tmp/jvm-common --strip-components=1
+curl --silent --location $JVM_COMMON_BUILDPACK | tar --extract --xz --touch -C /tmp/jvm-common --strip-components=1
 . /tmp/jvm-common/bin/util
 . /tmp/jvm-common/bin/java
 
@@ -89,7 +85,7 @@ $PLAY_PATH/play version | sed -u 's/^/       /'
 # Precompile the Play! application at the root of $BUILD_DIR
 APP_DIR=./
 echo "       Building Play! application at directory $APP_DIR"
-
+# added --nosync
 DEPENDENCIES_CMD="$PLAY_PATH/play dependencies $APP_DIR --forProd --nosync --forceCopy --silent -Duser.home=$BUILD_DIR 2>&1"
 echo "       Resolving dependencies: $DEPENDENCIES_CMD"
 eval "$DEPENDENCIES_CMD" | sed -u 's/^/       /'
@@ -107,9 +103,34 @@ for DIR in $PLAY_PATH $IVY_PATH ; do
   cp -r $DIR $CACHE_DIR/$DIR
 done
 
-PROFILE_PATH="$BUILD_DIR/.profile.d/play.sh"
+# Prefix file to be executed before JVM_COMMON
+PROFILE_PATH="$BUILD_DIR/.profile.d/10-play.sh"
 mkdir -p $(dirname $PROFILE_PATH)
-echo 'export PATH="/app/.play:/app/.jdk/bin:/app/.tools:$PATH"' >> $PROFILE_PATH
+
+cat <<EOF > $PROFILE_PATH
+function java_xmx_from_size() {
+  case \$CONTAINER_SIZE in
+    XS) echo 96;;
+    S) echo 192;;
+    M) echo 384;;
+    L) echo 768;;
+    XL) echo 1536;;
+    2XL) echo 3072;;
+    3XL) echo 6144;;
+    4XL) echo 12288;;
+    *) echo 384;;
+  esac
+}
+
+function java_opts_from_size() {
+  [ -z "\$JAVA_XMX" ] && JAVA_XMX=\$(java_xmx_from_size)
+  echo "-Xmx\${JAVA_XMX}m -Xss512k -XX:+UseCompressedOops"
+}
+
+[ -z "\$JAVA_OPTS" ] && export JAVA_OPTS=\$(java_opts_from_size)
+
+export PATH="/app/.play:/app/.jdk/bin:/app/.tools:\$PATH"
+EOF
 
 # Remove build time dependencies from slug
 # (Note: runtime modules are copied to slug with --forceCopy option)
