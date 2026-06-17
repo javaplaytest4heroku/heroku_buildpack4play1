@@ -20,8 +20,8 @@ export_env_dir $ENV_DIR
 #JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-"https://buildpack-registry.s3.amazonaws.com/buildpacks/heroku/jvm.tgz"}
 JVM_COMMON_BUILDPACK=${JVM_COMMON_BUILDPACK:-"https://buildpack-registry.s3.dualstack.us-east-1.amazonaws.com/buildpacks/heroku/jvm.tgz"}
 mkdir -p /tmp/jvm-common
-#curl --silent --location $JVM_COMMON_BUILDPACK | tar xzm -C /tmp/jvm-common --strip-components=1
-curl --silent --location $JVM_COMMON_BUILDPACK | tar --extract --xz --touch -C /tmp/jvm-common --strip-components=1
+curl --silent --location $JVM_COMMON_BUILDPACK | tar xzm -C /tmp/jvm-common --strip-components=1
+#curl --silent --location $JVM_COMMON_BUILDPACK | tar --extract --xz --touch -C /tmp/jvm-common --strip-components=1
 . /tmp/jvm-common/bin/util
 . /tmp/jvm-common/bin/java
 
