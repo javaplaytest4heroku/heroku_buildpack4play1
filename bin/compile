@@ -3,6 +3,8 @@
 
 # Parse args
 BUILD_DIR=$1
+#add this
+HOST_BUILDPACK_DIR=$1
 CACHE_DIR=$2
 ENV_DIR=$3
 
@@ -37,7 +39,7 @@ fi
 #javaVersion=$(detect_java_version ${BUILD_DIR})
 echo -n "-----> Installing OpenJDK ${javaVersion}..."
 #install_java ${BUILD_DIR} ${javaVersion}
-install_openjdk ${BUILD_DIR} ${BUILDPACK_DIR}
+install_openjdk ${BUILD_DIR} ${HOST_BUILDPACK_DIR}
 #jdk_overlay ${BUILD_DIR}
 echo " done"
 
